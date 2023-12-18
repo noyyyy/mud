@@ -20,6 +20,7 @@ type DeployOptions<configInput extends ConfigInput> = {
   client: Client<Transport, Chain | undefined, Account>;
   config: Config<configInput>;
   worldAddress?: Address;
+  viaCreate?: boolean;
 };
 
 /**
@@ -32,11 +33,14 @@ export async function deploy<configInput extends ConfigInput>({
   client,
   config,
   worldAddress: existingWorldAddress,
+  viaCreate,
 }: DeployOptions<configInput>): Promise<WorldDeploy> {
   const tables = Object.values(config.tables) as Table[];
   const systems = Object.values(config.systems);
 
-  await ensureDeployer(client);
+  if (!viaCreate) {
+    await ensureDeployer(client);
+  }
 
   // deploy all dependent contracts, because system registration, module install, etc. all expect these contracts to be callable.
   await ensureContractsDeployed({
@@ -54,6 +58,7 @@ export async function deploy<configInput extends ConfigInput>({
         label: `${mod.name} module`,
       })),
     ],
+    viaCreate,
   });
 
   const worldDeploy = existingWorldAddress

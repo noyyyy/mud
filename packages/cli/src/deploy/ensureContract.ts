@@ -11,6 +11,7 @@ export type Contract = {
   bytecode: Hex;
   deployedBytecodeSize: number;
   label?: string;
+  viaCreate?: boolean;
 };
 
 export async function ensureContract({
@@ -18,9 +19,42 @@ export async function ensureContract({
   bytecode,
   deployedBytecodeSize,
   label = "contract",
+  viaCreate,
 }: {
   readonly client: Client<Transport, Chain | undefined, Account>;
 } & Contract): Promise<readonly Hex[]> {
+  if (viaCreate) {
+    if (deployedBytecodeSize > contractSizeLimit) {
+      console.warn(
+        `\nBytecode for ${label} (${deployedBytecodeSize} bytes) is over the contract size limit (${contractSizeLimit} bytes). Run \`forge build --sizes\` for more info.\n`
+      );
+    } else if (deployedBytecodeSize > contractSizeLimit * 0.95) {
+      console.warn(
+        `\nBytecode for ${label} (${deployedBytecodeSize} bytes) is almost over the contract size limit (${contractSizeLimit} bytes). Run \`forge build --sizes\` for more info.\n`
+      );
+    }
+
+    debug("deploying", label, "via create");
+
+    return [
+      await pRetry(
+        () =>
+          sendTransaction(client, {
+            chain: client.chain ?? null,
+            data: concatHex([bytecode]),
+          }),
+        {
+          retries: 3,
+          onFailedAttempt: async (error) => {
+            const delay = error.attemptNumber * 500;
+            debug(`failed to deploy ${label}, retrying in ${delay}ms...`);
+            await wait(delay);
+          },
+        }
+      ),
+    ];
+  }
+
   const address = getCreate2Address({ from: deployer, salt, bytecode });
 
   const contractCode = await getBytecode(client, { address, blockTag: "pending" });
@@ -40,6 +74,7 @@ export async function ensureContract({
   }
 
   debug("deploying", label, "at", address);
+
   return [
     await pRetry(
       () =>

@@ -13,10 +13,12 @@ export async function ensureSystems({
   client,
   worldDeploy,
   systems,
+  viaCreate,
 }: {
   readonly client: Client<Transport, Chain | undefined, Account>;
   readonly worldDeploy: WorldDeploy;
   readonly systems: readonly System[];
+  readonly viaCreate?: boolean;
 }): Promise<readonly Hex[]> {
   const [worldSystems, worldAccess] = await Promise.all([
     getSystems({ client, worldDeploy }),
@@ -134,6 +136,7 @@ export async function ensureSystems({
       deployedBytecodeSize: system.deployedBytecodeSize,
       label: `${resourceLabel(system)} system`,
     })),
+    viaCreate,
   });
 
   const registerTxs = missingSystems.map((system) =>

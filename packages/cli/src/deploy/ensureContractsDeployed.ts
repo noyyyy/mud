@@ -6,11 +6,15 @@ import { Contract, ensureContract } from "./ensureContract";
 export async function ensureContractsDeployed({
   client,
   contracts,
+  viaCreate,
 }: {
   readonly client: Client<Transport, Chain | undefined, Account>;
   readonly contracts: readonly Contract[];
+  readonly viaCreate?: boolean;
 }): Promise<readonly Hex[]> {
-  const txs = (await Promise.all(contracts.map((contract) => ensureContract({ client, ...contract })))).flat();
+  const txs = (
+    await Promise.all(contracts.map((contract) => ensureContract({ client, ...contract, viaCreate })))
+  ).flat();
 
   if (txs.length) {
     debug("waiting for contracts");

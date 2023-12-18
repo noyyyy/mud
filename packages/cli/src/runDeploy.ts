@@ -29,6 +29,10 @@ export const deployOptions = {
     type: "boolean",
     desc: "Always run PostDeploy.s.sol after each deploy (including during upgrades). By default, PostDeploy.s.sol is only run once after a new world is deployed.",
   },
+  viaCreate: {
+    type: "boolean",
+    desc: "deploy contracts via create rather create2",
+  },
 } as const satisfies Record<string, Options>;
 
 export type DeployOptions = InferredOptionTypes<typeof deployOptions>;
@@ -82,7 +86,9 @@ in your contracts directory to use the default anvil private key.`
     worldAddress: opts.worldAddress as Hex | undefined,
     client,
     config: resolvedConfig,
+    viaCreate: opts.viaCreate,
   });
+
   if (opts.worldAddress == null || opts.alwaysRunPostDeploy) {
     await postDeploy(config.postDeployScript, worldDeploy.address, rpc, profile);
   }

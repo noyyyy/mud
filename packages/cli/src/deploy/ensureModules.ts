@@ -10,10 +10,12 @@ export async function ensureModules({
   client,
   worldDeploy,
   modules,
+  viaCreate,
 }: {
   readonly client: Client<Transport, Chain | undefined, Account>;
   readonly worldDeploy: WorldDeploy;
   readonly modules: readonly Module[];
+  readonly viaCreate?: boolean;
 }): Promise<readonly Hex[]> {
   if (!modules.length) return [];
 
@@ -24,6 +26,7 @@ export async function ensureModules({
       deployedBytecodeSize: mod.deployedBytecodeSize,
       label: `${mod.name} module`,
     })),
+    viaCreate,
   });
 
   debug("installing modules:", modules.map((mod) => mod.name).join(", "));
