@@ -1,7 +1,17 @@
 import coreModuleBuild from "@latticexyz/world/out/CoreModule.sol/CoreModule.json" assert { type: "json" };
 import worldFactoryBuild from "@latticexyz/world/out/WorldFactory.sol/WorldFactory.json" assert { type: "json" };
-import { Client, Transport, Chain, Account, Hex, parseAbi, getCreate2Address, encodeDeployData, size } from "viem";
-import { deployer } from "./ensureDeployer";
+import {
+  Client,
+  Transport,
+  Chain,
+  Account,
+  Hex,
+  parseAbi,
+  getCreate2Address,
+  encodeDeployData,
+  size,
+  Address,
+} from "viem";
 import { salt } from "./common";
 import { ensureContractsDeployed } from "./ensureContractsDeployed";
 import { Contract } from "./ensureContract";
@@ -21,7 +31,9 @@ export const worldFactoryBytecode = encodeDeployData({
   args: [coreModule],
 });
 
-export const worldFactory = getCreate2Address({ from: deployer, bytecode: worldFactoryBytecode, salt });
+export const worldFactory = (deployer: Address) => {
+  return getCreate2Address({ from: deployer, bytecode: worldFactoryBytecode, salt });
+};
 
 export const worldFactoryContracts: readonly Contract[] = [
   {
@@ -37,11 +49,13 @@ export const worldFactoryContracts: readonly Contract[] = [
 ];
 
 export async function ensureWorldFactory(
-  client: Client<Transport, Chain | undefined, Account>
+  client: Client<Transport, Chain | undefined, Account>,
+  viaCreate?: boolean
 ): Promise<readonly Hex[]> {
   // WorldFactory constructor doesn't call CoreModule, only sets its address, so we can do these in parallel since the address is deterministic
   return await ensureContractsDeployed({
     client,
     contracts: worldFactoryContracts,
+    viaCreate,
   });
 }

@@ -10,7 +10,7 @@ export async function ensureContractsDeployed({
 }: {
   readonly client: Client<Transport, Chain | undefined, Account>;
   readonly contracts: readonly Contract[];
-  readonly viaCreate?: boolean;
+  readonly viaCreate: boolean | undefined;
 }): Promise<readonly Hex[]> {
   const txs = (
     await Promise.all(contracts.map((contract) => ensureContract({ client, ...contract, viaCreate })))

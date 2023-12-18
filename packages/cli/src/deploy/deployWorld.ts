@@ -7,8 +7,13 @@ import { debug } from "./debug";
 import { logsToWorldDeploy } from "./logsToWorldDeploy";
 import { WorldDeploy } from "./common";
 
-export async function deployWorld(client: Client<Transport, Chain | undefined, Account>): Promise<WorldDeploy> {
-  await ensureWorldFactory(client);
+export async function deployWorld(
+  client: Client<Transport, Chain | undefined, Account>,
+  viaCreate: boolean
+): Promise<WorldDeploy> {
+  if (viaCreate) {
+    await ensureWorldFactory(client, viaCreate);
+  }
 
   debug("deploying world");
   const tx = await writeContract(client, {
